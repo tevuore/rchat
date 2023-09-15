@@ -17,6 +17,21 @@ pub mod public {
     }
 
     pub fn settings(args: &Cli) -> Result<Settings> {
+        _settings(args)
+    }
+}
+
+mod private {
+    use crate::cli::Cli;
+    use crate::settings::{ChatGptSettings, Settings};
+    use std::fs::File;
+    use std::io::{BufReader, Read, Result};
+    use std::path::Path;
+    use toml::value::Table;
+
+    use super::public;
+
+    pub fn _settings(args: &Cli) -> Result<Settings> {
         // TODO could read setting file location from env
         // TODO could read a setting from env
 
@@ -49,18 +64,8 @@ pub mod public {
 
         Ok(settings)
     }
-}
 
-mod private {
-    use crate::settings::{ChatGptSettings, Settings};
-    use std::fs::File;
-    use std::io::{BufReader, Read, Result};
-    use std::path::Path;
-    use toml::value::Table;
-
-    use super::public;
-
-    pub fn read_settings(path: &Path) -> std::io::Result<Settings> {
+    fn read_settings(path: &Path) -> std::io::Result<Settings> {
         let f = File::open(path)?;
         let mut reader = BufReader::new(f);
 
@@ -83,13 +88,13 @@ mod private {
         })
     }
 
-    pub fn default_settings() -> Settings {
+    fn default_settings() -> Settings {
         Settings {
             chatgpt: default_chatgpt_settings(),
         }
     }
 
-    pub fn default_chatgpt_settings() -> ChatGptSettings {
+    fn default_chatgpt_settings() -> ChatGptSettings {
         ChatGptSettings {
             api_key: "undefined".to_string(),
             model: "undefined".to_string(),
