@@ -24,9 +24,10 @@ pub mod public {
 mod private {
     use crate::cli::Cli;
     use crate::settings::{ChatGptSettings, Settings};
+    use dirs::home_dir;
     use std::fs::File;
     use std::io::{BufReader, Read, Result};
-    use std::path::Path;
+    use std::path::{Path, PathBuf};
     use toml::value::Table;
 
     use super::public;
@@ -34,9 +35,18 @@ mod private {
     pub fn _settings(args: &Cli) -> Result<Settings> {
         // TODO could read setting file location from env
         // TODO could read a setting from env
+        let default_settings_file = default_home_settings_file();
+
+        let settings_file = args
+            .settings_file
+            .as_ref()
+            .or_else(|| Some(&default_settings_file));
 
         // TODO debug if file exists
-        let settings = match &args.settings_file {
+
+        // TODO fix this as match is not needed? Question is how settings are layered, i.e. if given
+        // specific file doesn't exists but default one exists? And then if both are missing then return plain defaults?
+        let settings = match &settings_file {
             Some(path) => {
                 if path.exists() {
                     if args.debug {
@@ -65,7 +75,27 @@ mod private {
         Ok(settings)
     }
 
-    fn read_settings(path: &Path) -> std::io::Result<Settings> {
+    fn get_file_in_home_dir(filename: &str) -> Option<PathBuf> {
+        home_dir().map(|mut path| {
+            path.push(filename);
+            path
+        })
+    }
+
+    fn default_home_settings_file() -> PathBuf {
+        get_file_in_home_dir(".rchat.toml").unwrap()
+    }
+    // fn default_home_settings_file() -> PathBuf {
+    //     if let Some(mut path) = home_dir() {
+    //         path.push("your_file.txt");
+    //         println!("File path: {:?}", path);
+    //     } else {
+    //         println!("Home directory not found");
+    //     }
+    //     Path::new("~/.rchat.toml").to_path_buf()
+    // }
+
+    fn read_settings(path: &Path) -> Result<Settings> {
         let f = File::open(path)?;
         let mut reader = BufReader::new(f);
 

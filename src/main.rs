@@ -2,7 +2,10 @@
 
 mod cli;
 use crate::cli::Cli;
+mod chatgpt_request;
 mod settings;
+use crate::chatgpt_request::chatgpt_request;
+
 use crate::settings::settings;
 
 use clap::{arg, Parser};
@@ -15,7 +18,8 @@ use toml::value::Table;
 // TODO can we have hierarchical error, what failed and why failed?
 // TODO and nice cli output + stack trace with debug?
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
     let args = Cli::parse();
 
     if args.debug {
@@ -24,30 +28,33 @@ fn main() -> Result<()> {
     }
     let settings = settings(&args)?;
 
-    let f = File::open(&args.path)?;
-    let mut reader = BufReader::new(f);
+    chatgpt_request(&settings.chatgpt).await;
+    println!("Done");
 
-    let mut any_match = false;
-    let mut line = String::new();
-    while let Ok(len) = reader.read_line(&mut line) {
-        if len == 0 {
-            break;
-        }
-        if args.debug {
-            println!("DEBUG read {} bytes", len);
-        }
-        if line.contains(&args.pattern) {
-            println!("{}", line);
-            any_match = true;
-        }
-
-        // reset buffer
-        line.truncate(0);
-    }
-
-    if !any_match {
-        println!("No matches");
-    }
+    // let f = File::open(&args.path)?;
+    // let mut reader = BufReader::new(f);
+    //
+    // let mut any_match = false;
+    // let mut line = String::new();
+    // while let Ok(len) = reader.read_line(&mut line) {
+    //     if len == 0 {
+    //         break;
+    //     }
+    //     if args.debug {
+    //         println!("DEBUG read {} bytes", len);
+    //     }
+    //     if line.contains(&args.pattern) {
+    //         println!("{}", line);
+    //         any_match = true;
+    //     }
+    //
+    //     // reset buffer
+    //     line.truncate(0);
+    // }
+    //
+    // if !any_match {
+    //     println!("No matches");
+    // }
 
     Ok(())
 }
