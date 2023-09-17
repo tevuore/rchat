@@ -81,6 +81,11 @@ mod private {
         finish_reason: String, // like "length"
     }
 
+    #[derive(Serialize)]
+    struct PromptRequest {
+        prompt: String,
+    }
+
     // TODO instead of printing directly into stdout, return the response and use a printer abstraction
 
     pub async fn request(my_prompt: &String, settings: &ChatGptSettings) -> Result<(), Error> {
@@ -95,6 +100,9 @@ mod private {
         // TODO wrap requests parameters to own class that can be serialized, perhaps builder pattern
 
         println!("ME: {}", my_prompt);
+        let your_struct = PromptRequest {
+            prompt: my_prompt.to_string(),
+        };
 
         let client = reqwest::Client::new();
         println!("make request");
@@ -102,7 +110,7 @@ mod private {
             .post("https://api.openai.com/v1/engines/davinci/completions")
             .header("Content-Type", "application/json")
             .header("Authorization", ["Bearer ", &settings.api_key].join(" "))
-            .body(r#"{"prompt": "Hello, how are you?"}"#) // TeroV add here my_prompt, json escape
+            .json(&your_struct) // TeroV add here my_prompt, json escape
             .send()
             .await;
 
