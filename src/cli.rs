@@ -13,6 +13,9 @@ pub mod public {
 
         #[arg(short, long)]
         pub debug: bool,
+
+        #[arg(long)]
+        pub debug_file: Option<std::path::PathBuf>, // TODO write test for command line as no two can be with -d
     }
 
     // TODO add parsing method here
