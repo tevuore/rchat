@@ -20,14 +20,10 @@ mod private {
 
     use crate::settings::ChatGptSettings;
 
-    #[derive(Deserialize)]
-    struct ApiResponse {
-        choices: Vec<Choice>,
-    }
-
-    #[derive(Deserialize)]
-    struct Choice {
-        text: String,
+    #[derive(Deserialize, Serialize)]
+    struct Message {
+        role: String,
+        content: String,
     }
 
     pub async fn request_models(settings: &ChatGptSettings) -> Result<(), Error> {
@@ -76,14 +72,23 @@ mod private {
     #[derive(Deserialize, Serialize)]
     struct PromptResponseChoice {
         index: u32,
-        text: String,
+        message: Message,
         // logprobs: PromptResponseLogProbs,
-        finish_reason: String, // like "length"
+        finish_reason: String, // like "length" or "stop"
+    }
+
+    // "model": "gpt-3.5-turbo-16k",
+    // "messages": [{"role": "user", "content": "How to use ChatGPT API with cURL?"}]
+    #[derive(Serialize)]
+    struct PromptRequest {
+        model: String,
+        messages: Vec<PromptRequestMessage>,
     }
 
     #[derive(Serialize)]
-    struct PromptRequest {
-        prompt: String,
+    struct PromptRequestMessage {
+        role: String,
+        content: String,
     }
 
     // TODO instead of printing directly into stdout, return the response and use a printer abstraction
@@ -101,13 +106,21 @@ mod private {
 
         println!("ME: {}", my_prompt);
         let your_struct = PromptRequest {
-            prompt: my_prompt.to_string(),
+            model: settings.model.clone(),
+            messages: vec![PromptRequestMessage {
+                role: "user".to_string(),
+                content: my_prompt.clone(),
+            }],
         };
 
+        let serialized_json = serde_json::to_string(&your_struct).unwrap();
+        println!("request: {}", serialized_json);
+
+        // TODO debug output ongoing json
         let client = reqwest::Client::new();
         println!("make request");
         let res = client
-            .post("https://api.openai.com/v1/engines/davinci/completions")
+            .post("https://api.openai.com/v1/chat/completions")
             .header("Content-Type", "application/json")
             .header("Authorization", ["Bearer ", &settings.api_key].join(" "))
             .json(&your_struct) // TeroV add here my_prompt, json escape
@@ -117,7 +130,9 @@ mod private {
         match res {
             Ok(res) => {
                 println!("prompt request finished {:?}", res.status());
-                //let body = res.json::<PromptResponse>().await?; // TODO json wants struct?
+                // TODO FOR debugging
+                // let textBody = res.text().await?; // TODO json wants struct?
+                // println!("prompt request body {:?}", textBody);
 
                 let body = match res.json::<PromptResponse>().await {
                     Ok(res) => {
@@ -131,14 +146,19 @@ mod private {
                     }
                 };
 
-                let response = match body.choices.first().map(|choice| &choice.text) {
+                let response = match body.choices.first().map(|choice| &choice.message.content) {
                     Some(text) => text,
                     None => "No response",
                 };
 
                 println!("CHATGPT: {:?}", response);
             }
-            Err(e) => println!("prompt request error {:?}", e),
+            Err(e) => {
+                println!("prompt request error {:?}", e);
+
+                // let textBody = e.().await?; // TODO json wants struct?
+                // println!("prompt request body {:?}", textBody);
+            }
         }
 
         // TODO handle error
