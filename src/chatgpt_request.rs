@@ -22,8 +22,16 @@ mod private {
     use crate::debug_logger::DebugLogger;
     use crate::settings::ChatGptSettings;
 
-    #[derive(Deserialize, Serialize)]
-    struct Message {
+    // "model": "gpt-3.5-turbo-16k",
+    // "messages": [{"role": "user", "content": "How to use ChatGPT API with cURL?"}]
+    #[derive(Serialize)]
+    struct PromptRequest {
+        model: String,
+        messages: Vec<PromptRequestMessage>,
+    }
+
+    #[derive(Serialize)]
+    struct PromptRequestMessage {
         role: String,
         content: String,
     }
@@ -49,21 +57,13 @@ mod private {
     #[derive(Deserialize, Serialize)]
     struct PromptResponseChoice {
         index: u32,
-        message: Message,
+        message: PromptResponseMessage,
         // logprobs: PromptResponseLogProbs,
         finish_reason: String, // like "length" or "stop"
     }
 
-    // "model": "gpt-3.5-turbo-16k",
-    // "messages": [{"role": "user", "content": "How to use ChatGPT API with cURL?"}]
-    #[derive(Serialize)]
-    struct PromptRequest {
-        model: String,
-        messages: Vec<PromptRequestMessage>,
-    }
-
-    #[derive(Serialize)]
-    struct PromptRequestMessage {
+    #[derive(Deserialize, Serialize)]
+    struct PromptResponseMessage {
         role: String,
         content: String,
     }
