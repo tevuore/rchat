@@ -4,6 +4,7 @@ pub mod public {
     use super::private::*;
     use crate::cli::Cli;
     use std::io::Result;
+    use crate::debug_logger::DebugLogger;
 
     #[derive(Debug)]
     pub struct Settings {
@@ -16,8 +17,8 @@ pub mod public {
         pub model: String, // TODO should use enum?
     }
 
-    pub fn settings(args: &Cli) -> Result<Settings> {
-        _settings(args)
+    pub fn settings(args: &Cli, log: &Box<dyn DebugLogger>) -> Result<Settings> {
+        _settings(args, log)
     }
 }
 
@@ -29,12 +30,13 @@ mod private {
     use std::io::{BufReader, Read, Result};
     use std::path::{Path, PathBuf};
     use toml::value::Table;
+    use crate::debug_logger::DebugLogger;
 
     use super::public;
 
     // TODO how to validate model is correct one (name)?
 
-    pub fn _settings(args: &Cli) -> Result<Settings> {
+    pub fn _settings(args: &Cli, log: &Box<dyn DebugLogger>) -> Result<Settings> {
         // TODO could read setting file location from env
         // TODO could read a setting from env
         let default_settings_file = default_home_settings_file();
@@ -52,15 +54,15 @@ mod private {
             Some(path) => {
                 if path.exists() {
                     if args.debug {
-                        println!("DEBUG: Reading settings file {:?}", path);
+                        log.debug(&format!("DEBUG: Reading settings file {:?}", path));
                     }
                     read_settings(&path)?
                 } else {
                     if args.debug {
-                        println!(
+                        log.debug(&format!(
                             "DEBUG: Settings file {:?} does not exist, using default",
                             path
-                        );
+                        ));
                     }
                     Settings {
                         chatgpt: default_chatgpt_settings(),
@@ -87,15 +89,6 @@ mod private {
     fn default_home_settings_file() -> PathBuf {
         get_file_in_home_dir(".rchat.toml").unwrap()
     }
-    // fn default_home_settings_file() -> PathBuf {
-    //     if let Some(mut path) = home_dir() {
-    //         path.push("your_file.txt");
-    //         println!("File path: {:?}", path);
-    //     } else {
-    //         println!("Home directory not found");
-    //     }
-    //     Path::new("~/.rchat.toml").to_path_buf()
-    // }
 
     fn read_settings(path: &Path) -> Result<Settings> {
         let f = File::open(path)?;
@@ -106,15 +99,16 @@ mod private {
         let value = match data.parse::<Table>() {
             Ok(value) => value,
             Err(e) => {
-                println!("Error parsing settings file: {}", e);
+                println!("ERROR: Failed to parse settings file: {}", e);
                 std::process::exit(1);
             }
         };
 
         Ok(Settings {
-            // TODO could use toml deserialize
+            // TODO could use toml deserialize to an struct
             chatgpt: ChatGptSettings {
-                api_key: value["chatgpt"]["api_key"].as_str().unwrap().to_string(), // TODO what happens if key doesn't exist? TEST
+                // TODO what happens if key doesn't exist? TEST
+                api_key: value["chatgpt"]["api_key"].as_str().unwrap().to_string(),
                 model: value["chatgpt"]["model"].as_str().unwrap().to_string(),
             },
         })
