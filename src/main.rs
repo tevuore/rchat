@@ -40,7 +40,7 @@ async fn main() -> Result<()> {
         }
     };
 
-    let settings = settings(&args)?;
+    let settings = settings(&args, &log)?;
 
     // TODO rethink this way of passing logger, IoC way?
     chatgpt_request(&prompt, &settings.chatgpt, &log).await;
