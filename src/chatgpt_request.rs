@@ -20,38 +20,12 @@ mod private {
     use reqwest::Error;
     use serde::{Deserialize, Serialize};
     use crate::debug_logger::DebugLogger;
-
     use crate::settings::ChatGptSettings;
 
     #[derive(Deserialize, Serialize)]
     struct Message {
         role: String,
         content: String,
-    }
-
-    pub async fn request_models(settings: &ChatGptSettings) -> Result<(), Error> {
-        let client = reqwest::Client::new();
-        println!("make model request");
-        let res = client
-            .get("https://api.openai.com/v1/models")
-            .header("Content-Type", "application/json")
-            .header("Authorization", ["Bearer ", &settings.api_key].join(" "))
-            .send()
-            .await;
-
-        // TODO proper error handling
-        match res {
-            Ok(res) => {
-                println!("model request finished {:?}", res.status());
-                let body = res.text().await?; // TODO json wants struct?
-                println!("Body: {}", serde_json::to_string_pretty(&body).unwrap());
-            }
-            Err(e) => println!("model request error {:?}", e),
-        }
-
-        // TODO handle error properly
-
-        Ok(())
     }
 
     // This `derive` requires the `serde` dependency.
@@ -156,6 +130,34 @@ mod private {
                 println!("ERROR: Prompt request error {:?}", e);
             }
         }
+
+        // TODO now passing always Ok, but should pass error if request fails
+        Ok(())
+    }
+
+    pub async fn request_models(
+        settings: &ChatGptSettings,
+        log: &Box<dyn DebugLogger>) -> Result<(), Error> {
+        let client = reqwest::Client::new();
+        log.debug(&"Start model request...");
+        let res = client
+            .get("https://api.openai.com/v1/models")
+            .header("Content-Type", "application/json")
+            .header("Authorization", ["Bearer ", &settings.api_key].join(" "))
+            .send()
+            .await;
+
+        // TODO proper error handling
+        match res {
+            Ok(res) => {
+                log.debug(&format!("model request finished: status_code={:?}", res.status()));
+                let body = res.text().await?; // TODO json wants struct?
+                log.debug(&format!("Body: {}", serde_json::to_string_pretty(&body).unwrap()));
+            }
+            Err(e) => println!("ERROR: model request error {:?}", e),
+        }
+
+        // TODO handle error properly
 
         Ok(())
     }
