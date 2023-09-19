@@ -25,8 +25,8 @@ mod settings;
 async fn main() -> Result<()> {
     let args = Cli::parse();
 
-    let debug = build_debug_logger(&args);
-    debug.debug(&"Starting...");
+    let log = build_debug_logger(&args);
+    log.debug(&"Starting...");
 
     let prompt = match &args.prompt {
         Some(prompt) => prompt.clone(),
@@ -42,9 +42,10 @@ async fn main() -> Result<()> {
 
     let settings = settings(&args)?;
 
-    chatgpt_request(&prompt, &settings.chatgpt).await;
+    // TODO rethink this way of passing logger, IoC way?
+    chatgpt_request(&prompt, &settings.chatgpt, &log).await;
 
-    println!("Exiting...");
+    log.debug(&"Exiting...");
 
     Ok(())
 }
