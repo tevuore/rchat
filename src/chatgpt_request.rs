@@ -124,7 +124,7 @@ mod private {
                 };
 
                 // TODO I get quotes around the response, why?
-                println!("CHATGPT: {:?}", response);
+                println!("CHATGPT: {}", response);
             }
             Err(e) => {
                 println!("ERROR: Prompt request error {:?}", e);
