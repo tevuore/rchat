@@ -1,6 +1,7 @@
 pub use public::*;
 
 pub mod public {
+    use std::io::Error;
     use crate::chatgpt_request::private;
     use crate::debug_logger::DebugLogger;
     use crate::settings::ChatGptSettings;
@@ -8,12 +9,17 @@ pub mod public {
     pub async fn chatgpt_request(
         my_prompt: &String,
         settings: &ChatGptSettings,
-        log: &Box<dyn DebugLogger>) {
-        private::request(my_prompt, settings, &log).await.and_then(|_| {
-            log.debug(&"Chat request finished");
-            Ok(())
-        });
+        log: &Box<dyn DebugLogger>) -> Result<String, reqwest::Error> {
+        match private::request(my_prompt, settings, &log).await  {
+            Ok(response_text) => {
+                log.debug(&"Chat request finished");
+                Ok(response_text)
+            },
+            Err(e) => Err(e),
+        }
+
     }
+
 }
 
 mod private {
@@ -69,18 +75,14 @@ mod private {
         content: String,
     }
 
-    // TODO instead of printing directly into stdout, return the response and use a printer abstraction
-
     pub async fn request(
         my_prompt: &String,
         settings: &ChatGptSettings,
-        log: &Box<dyn DebugLogger>) -> Result<(), Error> {
+        log: &Box<dyn DebugLogger>) -> Result<String, Error> {
 
         // TODO calculate how much time takes to make request
         // TODO wrap requests parameters to own class that can be serialized, perhaps builder pattern
 
-        println!("ME: {}", termimad::inline(my_prompt));
-        
         let your_struct = PromptRequest {
             model: settings.model.clone(),
             messages: vec![PromptRequestMessage {
@@ -104,7 +106,7 @@ mod private {
             .send()
             .await;
 
-        match res {
+        let response = match res {
             Ok(res) => {
                 log.debug(&format!("Prompt request finished: status_code={:?}", res.status()));
 
@@ -115,6 +117,7 @@ mod private {
                         res
                     }
                     Err(e) => {
+                        // TODO how to give additional message?
                         println!("ERROR: Prompt request error {:?}", e);
                         Err(e)?
                     }
@@ -126,15 +129,17 @@ mod private {
                 };
 
                 // TODO I get quotes around the response, why?
-                println!("CHATGPT: {}", termimad::inline(response));
+                response.to_string()
             }
             Err(e) => {
-                println!("ERROR: Prompt request error {:?}", e);
+                // todo why this additional message approach gives compiler error?
+                //Err(format!("Prompt request error {:?}", e))?
+                Err(e)?
             }
-        }
+        };
 
         // TODO now passing always Ok, but should pass error if request fails
-        Ok(())
+        Ok(response)
     }
 
     pub async fn request_models(

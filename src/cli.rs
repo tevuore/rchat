@@ -16,6 +16,12 @@ pub mod public {
 
         #[arg(long)]
         pub debug_file: Option<std::path::PathBuf>, // TODO write test for command line as no two can be with -d
+
+        #[arg(long)]
+        pub no_markdown_output: bool,
+
+        #[arg(long)]
+        pub no_markdown_input: bool,
     }
 
     // TODO add parsing method here
