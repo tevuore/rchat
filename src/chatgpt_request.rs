@@ -19,6 +19,7 @@ pub mod public {
 mod private {
     use reqwest::Error;
     use serde::{Deserialize, Serialize};
+
     use crate::debug_logger::DebugLogger;
     use crate::settings::ChatGptSettings;
 
@@ -78,7 +79,8 @@ mod private {
         // TODO calculate how much time takes to make request
         // TODO wrap requests parameters to own class that can be serialized, perhaps builder pattern
 
-        println!("ME: {}", my_prompt);
+        println!("ME: {}", termimad::inline(my_prompt));
+        
         let your_struct = PromptRequest {
             model: settings.model.clone(),
             messages: vec![PromptRequestMessage {
@@ -124,7 +126,7 @@ mod private {
                 };
 
                 // TODO I get quotes around the response, why?
-                println!("CHATGPT: {}", response);
+                println!("CHATGPT: {}", termimad::inline(response));
             }
             Err(e) => {
                 println!("ERROR: Prompt request error {:?}", e);
