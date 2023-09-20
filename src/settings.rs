@@ -32,6 +32,8 @@ mod private {
 
     use super::public;
 
+    // TODO how to validate model is correct one (name)?
+
     pub fn _settings(args: &Cli) -> Result<Settings> {
         // TODO could read setting file location from env
         // TODO could read a setting from env
