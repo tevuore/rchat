@@ -9,10 +9,11 @@ use toml::value::Table;
 
 use crate::chatgpt_request::chatgpt_request;
 use crate::cli::Cli;
+use crate::debug_logger::{DebugLogger, EmptyDebugLogger, FileDebugLogger, StdoutDebugLogger};
 use crate::settings::settings;
 
 mod cli;
-
+mod debug_logger;
 mod chatgpt_request;
 mod settings;
 
@@ -23,6 +24,9 @@ mod settings;
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = Cli::parse();
+
+    let log = build_debug_logger(&args);
+    log.debug(&"Starting...");
 
     let prompt = match &args.prompt {
         Some(prompt) => prompt.clone(),
@@ -36,10 +40,24 @@ async fn main() -> Result<()> {
         }
     };
 
-    let settings = settings(&args)?;
+    let settings = settings(&args, &log)?;
 
-    chatgpt_request(&prompt, &settings.chatgpt).await;
-    println!("Done");
+    // TODO rethink this way of passing logger, IoC way?
+    chatgpt_request(&prompt, &settings.chatgpt, &log).await;
+
+    log.debug(&"Exiting...");
 
     Ok(())
+}
+
+fn build_debug_logger(args: &Cli) -> Box<dyn DebugLogger> {
+    if args.debug {
+        if let Some(debug_file) = &args.debug_file {
+            Box::new(FileDebugLogger::new(debug_file))
+        } else {
+            Box::new(StdoutDebugLogger)
+        }
+    } else {
+        Box::new(EmptyDebugLogger)
+    }
 }
