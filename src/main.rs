@@ -16,6 +16,7 @@ mod cli;
 mod debug_logger;
 mod chatgpt_request;
 mod settings;
+mod printer;
 
 // TODO own error handling for file not found
 // TODO can we have hierarchical error, what failed and why failed?
@@ -43,7 +44,16 @@ async fn main() -> Result<()> {
     let settings = settings(&args, &log)?;
 
     // TODO rethink this way of passing logger, IoC way?
-    chatgpt_request(&prompt, &settings.chatgpt, &log).await;
+
+    printer::me_print_stdout(&prompt, &args);
+    match chatgpt_request(&prompt, &settings.chatgpt, &log).await {
+        Ok(response) => {
+            printer::ai_print_stdout(&response, &args);
+        }
+        Err(e) => {
+            printer::print_error(&e.to_string());
+        }
+    }
 
     log.debug(&"Exiting...");
 
