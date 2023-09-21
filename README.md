@@ -6,11 +6,19 @@ Rust based implementation for command AI chat application.
 At the moment this is app used is to learn Rust. Code is certainly not
 most beautiful and contains lots of todos. But there is a vision behind all.
 
-MVP under work in develop branch
+MVP 1 is ready and next MVP is under work in `develop` branch
 
-- send prompt from cli to ChatGPT
-- ask prompts by reading stdin interactively
-- pipe text to prompt
+✅ Send prompt from cli to ChatGPT
+✅ Ask prompt by reading stdin interactively
+✅ Pipe text to prompt
+✅ Format response using markdown formatter
+
+Next MVP 2 is planned to contain
+
+- support for custom instructions as first prompt in chat
+- read stdin loop for continuous chat
+- start writing developer tests
+- experiment with a coverage tool
 
 ## Usage
 
