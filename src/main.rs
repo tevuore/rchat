@@ -1,5 +1,7 @@
 #![allow(unused)]
 
+extern crate core;
+
 use std::fs::File;
 use std::io::{BufRead, BufReader, Error, Read, Result};
 use std::path::Path;
@@ -8,6 +10,7 @@ use clap::{arg, Parser};
 use toml::value::Table;
 
 use crate::chatgpt_request::chatgpt_request;
+use crate::cli::public::parse;
 use crate::cli::Cli;
 use crate::debug_logger::{DebugLogger, EmptyDebugLogger, FileDebugLogger, StdoutDebugLogger};
 use crate::settings::settings;
@@ -24,7 +27,7 @@ mod settings;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let args = Cli::parse();
+    let args = parse();
 
     let log = build_debug_logger(&args);
     log.debug(&"Starting...");
