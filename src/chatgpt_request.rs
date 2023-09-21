@@ -1,25 +1,24 @@
 pub use public::*;
 
 pub mod public {
-    use std::io::Error;
     use crate::chatgpt_request::private;
     use crate::debug_logger::DebugLogger;
     use crate::settings::ChatGptSettings;
+    use std::io::Error;
 
     pub async fn chatgpt_request(
         my_prompt: &String,
         settings: &ChatGptSettings,
-        log: &Box<dyn DebugLogger>) -> Result<String, reqwest::Error> {
-        match private::request(my_prompt, settings, &log).await  {
+        log: &Box<dyn DebugLogger>,
+    ) -> Result<String, reqwest::Error> {
+        match private::request(my_prompt, settings, &log).await {
             Ok(response_text) => {
                 log.debug(&"Chat request finished");
                 Ok(response_text)
-            },
+            }
             Err(e) => Err(e),
         }
-
     }
-
 }
 
 mod private {
@@ -78,8 +77,8 @@ mod private {
     pub async fn request(
         my_prompt: &String,
         settings: &ChatGptSettings,
-        log: &Box<dyn DebugLogger>) -> Result<String, Error> {
-
+        log: &Box<dyn DebugLogger>,
+    ) -> Result<String, Error> {
         // TODO calculate how much time takes to make request
         // TODO wrap requests parameters to own class that can be serialized, perhaps builder pattern
 
@@ -108,12 +107,18 @@ mod private {
 
         let response = match res {
             Ok(res) => {
-                log.debug(&format!("Prompt request finished: status_code={:?}", res.status()));
+                log.debug(&format!(
+                    "Prompt request finished: status_code={:?}",
+                    res.status()
+                ));
 
                 let body = match res.json::<PromptResponse>().await {
                     Ok(res) => {
                         // TODO full json only if debug
-                        log.debug(&format!("Body: {}", serde_json::to_string_pretty(&res).unwrap()));
+                        log.debug(&format!(
+                            "Body: {}",
+                            serde_json::to_string_pretty(&res).unwrap()
+                        ));
                         res
                     }
                     Err(e) => {
@@ -144,7 +149,8 @@ mod private {
 
     pub async fn request_models(
         settings: &ChatGptSettings,
-        log: &Box<dyn DebugLogger>) -> Result<(), Error> {
+        log: &Box<dyn DebugLogger>,
+    ) -> Result<(), Error> {
         let client = reqwest::Client::new();
         log.debug(&"Start model request...");
         let res = client
@@ -157,9 +163,15 @@ mod private {
         // TODO proper error handling
         match res {
             Ok(res) => {
-                log.debug(&format!("model request finished: status_code={:?}", res.status()));
+                log.debug(&format!(
+                    "model request finished: status_code={:?}",
+                    res.status()
+                ));
                 let body = res.text().await?; // TODO json wants struct?
-                log.debug(&format!("Body: {}", serde_json::to_string_pretty(&body).unwrap()));
+                log.debug(&format!(
+                    "Body: {}",
+                    serde_json::to_string_pretty(&body).unwrap()
+                ));
             }
             Err(e) => println!("ERROR: model request error {:?}", e),
         }

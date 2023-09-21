@@ -5,6 +5,6 @@
 mod tests {
     #[test]
     fn test_add_two() {
-        assert_eq!(2+2, 4);
+        assert_eq!(2 + 2, 4);
     }
 }

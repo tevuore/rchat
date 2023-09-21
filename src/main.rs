@@ -12,11 +12,11 @@ use crate::cli::Cli;
 use crate::debug_logger::{DebugLogger, EmptyDebugLogger, FileDebugLogger, StdoutDebugLogger};
 use crate::settings::settings;
 
+mod chatgpt_request;
 mod cli;
 mod debug_logger;
-mod chatgpt_request;
-mod settings;
 mod printer;
+mod settings;
 
 // TODO own error handling for file not found
 // TODO can we have hierarchical error, what failed and why failed?

@@ -3,8 +3,8 @@ pub use public::*;
 pub mod public {
     use super::private::*;
     use crate::cli::Cli;
-    use std::io::Result;
     use crate::debug_logger::DebugLogger;
+    use std::io::Result;
 
     #[derive(Debug)]
     pub struct Settings {
@@ -24,13 +24,13 @@ pub mod public {
 
 mod private {
     use crate::cli::Cli;
+    use crate::debug_logger::DebugLogger;
     use crate::settings::{ChatGptSettings, Settings};
     use dirs::home_dir;
     use std::fs::File;
     use std::io::{BufReader, Read, Result};
     use std::path::{Path, PathBuf};
     use toml::value::Table;
-    use crate::debug_logger::DebugLogger;
 
     use super::public;
 
