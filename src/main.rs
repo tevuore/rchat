@@ -44,11 +44,23 @@ async fn main() -> Result<()> {
         }
     };
 
+    // TeroV how to defined settings on config, command, env
+
+    // order of defining settings
+    // 1. if defined on command line -> use it
+    // 2. if defined on env var -> use it
+    // 3. if defined on config file -> use it
+    // 4. if not defined -> use default
+
     let settings = settings(&args, &log)?;
 
     // TODO rethink this way of passing logger, IoC way?
 
     printer::me_print_stdout(&prompt, &args);
+
+    // TeroV pass for request previous messages
+    // TeroV in case of custom instructions put it as first msg
+
     match chatgpt_request(&prompt, &settings.chatgpt, &log).await {
         Ok(response) => {
             printer::ai_print_stdout(&response, &args);
