@@ -8,10 +8,15 @@ most beautiful and contains lots of todos. But there is a vision behind all.
 
 MVP 1 is ready and next MVP is under work in `develop` branch
 
-✅ Send prompt from cli to ChatGPT
-✅ Ask prompt by reading stdin interactively
-✅ Pipe text to prompt
+## MVP 1
+
+Implemented  
+✅ Send prompt from cli to ChatGPT  
+✅ Ask prompt by reading stdin interactively  
+✅ Pipe text to prompt  
 ✅ Format response using markdown formatter
+
+## MVP 2
 
 Next MVP 2 is planned to contain
 
