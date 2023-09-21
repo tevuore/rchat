@@ -29,7 +29,6 @@ pub struct FileDebugLogger {
     file_path: PathBuf,
 }
 
-
 impl DebugLogger for FileDebugLogger {
     fn debug(&self, msg: &dyn Debug) {
         self._write_to_file(&format!("{:?}", msg));
@@ -38,7 +37,9 @@ impl DebugLogger for FileDebugLogger {
 
 impl FileDebugLogger {
     pub fn new(file: &PathBuf) -> Self {
-        FileDebugLogger { file_path: file.clone() }
+        FileDebugLogger {
+            file_path: file.clone(),
+        }
     }
 
     fn _write_to_file(&self, content: &String) -> std::io::Result<()> {
