@@ -23,7 +23,6 @@ pub mod public {
 mod private {
     use reqwest::Error;
     use serde::{Deserialize, Serialize};
-    use std::result;
 
     use crate::debug_logger::{debug_as_json, DebugLogger};
     use crate::settings::ChatGptSettings;
@@ -98,6 +97,8 @@ mod private {
             temperature: DEFAULT_TEMPERATURE,
         };
 
+        // TODO would optional message be better, or just add extra msg to debug as json?
+        log.debug(&"Request body:");
         debug_as_json(log, &your_struct);
 
         let client = reqwest::Client::new();
@@ -117,12 +118,12 @@ mod private {
                     res.status()
                 ));
 
-                let body_json = match res.bytes().await {
-                    Ok(response_bytes) => {
-                        debug_as_json(log, &your_struct);
+                let body_json = match res.text().await {
+                    Ok(response_text) => {
+                        log.debug_d(&response_text);
 
                         let prompt_response: PromptResponse =
-                            match serde_json::from_slice(&response_bytes) {
+                            match serde_json::from_slice(&response_text.as_bytes()) {
                                 Ok(my_struct) => my_struct,
                                 Err(e) => {
                                     let error_msg = format!(
