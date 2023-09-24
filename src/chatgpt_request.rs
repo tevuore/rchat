@@ -4,13 +4,12 @@ pub mod public {
     use crate::chatgpt_request::private;
     use crate::debug_logger::DebugLogger;
     use crate::settings::ChatGptSettings;
-    use std::io::Error;
 
     pub async fn chatgpt_request(
         my_prompt: &String,
         settings: &ChatGptSettings,
         log: &Box<dyn DebugLogger>,
-    ) -> Result<String, reqwest::Error> {
+    ) -> Result<String, String> {
         match private::request(my_prompt, settings, &log).await {
             Ok(response_text) => {
                 log.debug(&"Chat request finished");
@@ -24,9 +23,15 @@ pub mod public {
 mod private {
     use reqwest::Error;
     use serde::{Deserialize, Serialize};
+    use std::result;
 
     use crate::debug_logger::DebugLogger;
     use crate::settings::ChatGptSettings;
+
+    /// For ChatGPT API doc see https://platform.openai.com/docs/api-reference/
+
+    static API_ROOT: &str = "https://api.openai.com/v1";
+    static DEFAULT_TEMPERATURE: f32 = 0.8;
 
     // "model": "gpt-3.5-turbo-16k",
     // "messages": [{"role": "user", "content": "How to use ChatGPT API with cURL?"}]
@@ -34,6 +39,8 @@ mod private {
     struct PromptRequest {
         model: String,
         messages: Vec<PromptRequestMessage>,
+        temperature: f32, // TODO valid range 0-2 ?
+                          // TODO there also other props in API doc
     }
 
     #[derive(Serialize)]
@@ -65,7 +72,7 @@ mod private {
         index: u32,
         message: PromptResponseMessage,
         // logprobs: PromptResponseLogProbs,
-        finish_reason: String, // like "length" or "stop"
+        finish_reason: String, // like "length" or "stop", "functional_call" TODO how to map to enum
     }
 
     #[derive(Deserialize, Serialize)]
@@ -78,7 +85,7 @@ mod private {
         my_prompt: &String,
         settings: &ChatGptSettings,
         log: &Box<dyn DebugLogger>,
-    ) -> Result<String, Error> {
+    ) -> Result<String, String> {
         // TODO calculate how much time takes to make request
         // TODO wrap requests parameters to own class that can be serialized, perhaps builder pattern
 
@@ -88,6 +95,7 @@ mod private {
                 role: "user".to_string(),
                 content: my_prompt.clone(),
             }],
+            temperature: DEFAULT_TEMPERATURE,
         };
 
         let serialized_json = serde_json::to_string(&your_struct).unwrap();
@@ -98,7 +106,7 @@ mod private {
         let client = reqwest::Client::new();
         log.debug(&"Start request...");
         let res = client
-            .post("https://api.openai.com/v1/chat/completions")
+            .post(format!("{API_ROOT}/completions"))
             .header("Content-Type", "application/json")
             .header("Authorization", ["Bearer ", &settings.api_key].join(" "))
             .json(&your_struct)
@@ -112,34 +120,57 @@ mod private {
                     res.status()
                 ));
 
-                let body = match res.json::<PromptResponse>().await {
-                    Ok(res) => {
+                let body_json = match res.bytes().await {
+                    Ok(response_bytes) => {
                         // TODO full json only if debug
-                        log.debug(&format!(
-                            "Body: {}",
-                            serde_json::to_string_pretty(&res).unwrap()
-                        ));
-                        res
+                        if log.enabled() {
+                            let response_text = String::from_utf8_lossy(&response_bytes);
+                            log.debug(&format!(
+                                "Body: {}",
+                                serde_json::to_string_pretty(&response_text).unwrap()
+                            ));
+                        }
+
+                        let prompt_response: PromptResponse =
+                            match serde_json::from_slice(&response_bytes) {
+                                Ok(my_struct) => my_struct,
+                                Err(e) => {
+                                    let error_msg = format!(
+                                    "ERROR: Failed to parse response to PromptResponse json: {:?}",
+                                    e
+                                );
+                                    log.debug(&error_msg);
+                                    Err(error_msg)?
+                                }
+                            };
+
+                        prompt_response
                     }
+
                     Err(e) => {
-                        // TODO how to give additional message?
-                        println!("ERROR: Prompt request error {:?}", e);
-                        Err(e)?
+                        let error_msg =
+                            format!("ERROR: Failed get response body in bytes: {:?}", e);
+                        log.debug(&error_msg);
+                        Err(error_msg)?
                     }
                 };
 
-                let response = match body.choices.first().map(|choice| &choice.message.content) {
+                let response = match body_json
+                    .choices
+                    .first()
+                    .map(|choice| &choice.message.content)
+                {
                     Some(text) => text,
                     None => "No response",
                 };
 
-                // TODO I get quotes around the response, why?
                 response.to_string()
             }
             Err(e) => {
                 // todo why this additional message approach gives compiler error?
-                //Err(format!("Prompt request error {:?}", e))?
-                Err(e)?
+                let error_msg = format!("ERROR: Failed get response: {:?}", e);
+                log.debug(&error_msg);
+                Err(error_msg)?
             }
         };
 
@@ -154,7 +185,7 @@ mod private {
         let client = reqwest::Client::new();
         log.debug(&"Start model request...");
         let res = client
-            .get("https://api.openai.com/v1/models")
+            .get(format!("{API_ROOT}/models"))
             .header("Content-Type", "application/json")
             .header("Authorization", ["Bearer ", &settings.api_key].join(" "))
             .send()

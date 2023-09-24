@@ -7,6 +7,10 @@ use std::path::PathBuf;
 
 pub trait DebugLogger {
     fn debug(&self, msg: &dyn Debug);
+
+    fn enabled(&self) -> bool {
+        true
+    }
 }
 
 pub struct EmptyDebugLogger;
@@ -15,6 +19,10 @@ impl DebugLogger for EmptyDebugLogger {
     fn debug(&self, msg: &dyn Debug) {
         // do nothing
     }
+
+    fn enabled(&self) -> bool {
+        false
+    }
 }
 
 pub struct StdoutDebugLogger;
@@ -22,6 +30,10 @@ pub struct StdoutDebugLogger;
 impl DebugLogger for StdoutDebugLogger {
     fn debug(&self, msg: &dyn Debug) {
         println!("{:?}", msg);
+    }
+
+    fn enabled(&self) -> bool {
+        true
     }
 }
 
@@ -32,6 +44,10 @@ pub struct FileDebugLogger {
 impl DebugLogger for FileDebugLogger {
     fn debug(&self, msg: &dyn Debug) {
         self._write_to_file(&format!("{:?}", msg));
+    }
+
+    fn enabled(&self) -> bool {
+        true
     }
 }
 
