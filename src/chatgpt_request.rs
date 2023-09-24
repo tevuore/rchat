@@ -25,7 +25,7 @@ mod private {
     use serde::{Deserialize, Serialize};
     use std::result;
 
-    use crate::debug_logger::DebugLogger;
+    use crate::debug_logger::{debug_as_json, DebugLogger};
     use crate::settings::ChatGptSettings;
 
     /// For ChatGPT API doc see https://platform.openai.com/docs/api-reference/
@@ -98,11 +98,8 @@ mod private {
             temperature: DEFAULT_TEMPERATURE,
         };
 
-        let serialized_json = serde_json::to_string(&your_struct).unwrap();
-        // TODO now serialization happens even if debug is not enabled
-        log.debug(&format!("request: {}", serialized_json));
+        debug_as_json(log, &your_struct);
 
-        // TODO debug output ongoing json
         let client = reqwest::Client::new();
         log.debug(&"Start request...");
         let res = client
@@ -122,14 +119,7 @@ mod private {
 
                 let body_json = match res.bytes().await {
                     Ok(response_bytes) => {
-                        // TODO full json only if debug
-                        if log.enabled() {
-                            let response_text = String::from_utf8_lossy(&response_bytes);
-                            log.debug(&format!(
-                                "Body: {}",
-                                serde_json::to_string_pretty(&response_text).unwrap()
-                            ));
-                        }
+                        debug_as_json(log, &your_struct);
 
                         let prompt_response: PromptResponse =
                             match serde_json::from_slice(&response_bytes) {
