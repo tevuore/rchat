@@ -124,8 +124,9 @@ mod private {
                     Ok(response_bytes) => response_bytes,
                     Err(e) => {
                         let error_msg =
-                            format!("ERROR: Failed read response body in bytes: {:?}", e);
-                        log.debug(&error_msg);
+                            format!("Failed read response body in bytes: {:?}", e);
+                        // TODO whose responsibility is to debug log error?
+                        log.error(&error_msg);
                         Err(error_msg)?
                     }
                 };
@@ -138,10 +139,10 @@ mod private {
                 // there might be error although sending it self worked fine
                 if http_status != reqwest::StatusCode::OK {
                     let error_msg = format!(
-                        "ERROR: Prompt request failed: status_code={:?}",
+                        "Prompt request failed: status_code={:?}",
                         http_status
                     );
-                    log.debug(&error_msg);
+                    log.error(&error_msg);
                     Err(error_msg)?
                 }
 
@@ -150,10 +151,10 @@ mod private {
                     Ok(my_struct) => my_struct,
                     Err(e) => {
                         let error_msg = format!(
-                            "ERROR: Failed to parse response to PromptResponse json: {:?}",
+                            "Failed to parse response to PromptResponse json: {:?}",
                             e
                         );
-                        log.debug(&error_msg);
+                        log.error(&error_msg);
                         Err(error_msg)?
                     }
                 };
@@ -170,14 +171,12 @@ mod private {
                 response.to_string()
             }
             Err(e) => {
-                // todo why this additional message approach gives compiler error?
-                let error_msg = format!("ERROR: Failed get response: {:?}", e);
-                log.debug(&error_msg);
+                let error_msg = format!("Failed get response: {:?}", e);
+                log.error(&error_msg);
                 Err(error_msg)?
             }
         };
 
-        // TODO now passing always Ok, but should pass error if request fails
         Ok(response)
     }
 

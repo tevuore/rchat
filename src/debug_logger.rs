@@ -12,6 +12,8 @@ pub trait DebugLogger {
 
     fn debug_d(&self, msg: &dyn Display);
 
+    fn error(&self, msg: &dyn Display);
+
     fn enabled(&self) -> bool {
         true
     }
@@ -25,6 +27,10 @@ impl DebugLogger for EmptyDebugLogger {
     }
 
     fn debug_d(&self, msg: &dyn Display) {
+        // do nothing
+    }
+
+    fn error(&self, msg: &dyn Display) {
         // do nothing
     }
 
@@ -44,6 +50,10 @@ impl DebugLogger for StdoutDebugLogger {
         println!("DEBUG: {}", msg);
     }
 
+    fn error(&self, msg: &dyn Display) {
+        println!("ERROR: {}", msg);
+    }
+
     fn enabled(&self) -> bool {
         true
     }
@@ -60,6 +70,10 @@ impl DebugLogger for FileDebugLogger {
 
     fn debug_d(&self, msg: &dyn Display) {
         self._write_to_file(&format!("{}", msg));
+    }
+
+    fn error(&self, msg: &dyn Display) {
+        self._write_to_file(&format!("ERROR: {}", msg));
     }
     fn enabled(&self) -> bool {
         true
