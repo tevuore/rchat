@@ -102,11 +102,12 @@ mod private {
         debug_as_json(log, &your_struct);
 
         let client = reqwest::Client::new();
-        log.debug(&"Start request...");
-        log.debug(&format!("{API_ROOT}/completions")); // TeroV URL problem?
+        log.debug(&"...");
+        let url = format!("{API_ROOT}/chat/completions");
+        log.debug(&format!("Start request {url}"));
 
         let res = client
-            .post(format!("{API_ROOT}/completions"))
+            .post(url)
             .header("Content-Type", "application/json")
             .header("Authorization", ["Bearer ", &settings.api_key].join(" "))
             .json(&your_struct)
