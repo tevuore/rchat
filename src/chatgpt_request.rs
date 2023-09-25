@@ -103,6 +103,8 @@ mod private {
 
         let client = reqwest::Client::new();
         log.debug(&"Start request...");
+        log.debug(&format!("{API_ROOT}/completions")); // TeroV URL problem?
+
         let res = client
             .post(format!("{API_ROOT}/completions"))
             .header("Content-Type", "application/json")
@@ -113,40 +115,49 @@ mod private {
 
         let response = match res {
             Ok(res) => {
-                log.debug(&format!(
-                    "Prompt request finished: status_code={:?}",
-                    res.status()
-                ));
+                // as we have response, we should have something to read, ok or error message
+                let http_status = res.status();
+                let bytes_result = res.bytes().await;
 
-                let body_json = match res.text().await {
-                    Ok(response_text) => {
-                        log.debug_d(&response_text);
-
-                        let prompt_response: PromptResponse =
-                            match serde_json::from_slice(&response_text.as_bytes()) {
-                                Ok(my_struct) => my_struct,
-                                Err(e) => {
-                                    let error_msg = format!(
-                                    "ERROR: Failed to parse response to PromptResponse json: {:?}",
-                                    e
-                                );
-                                    log.debug(&error_msg);
-                                    Err(error_msg)?
-                                }
-                            };
-
-                        prompt_response
-                    }
-
+                let response_bytes = match bytes_result {
+                    Ok(response_bytes) => response_bytes,
                     Err(e) => {
                         let error_msg =
-                            format!("ERROR: Failed get response body in bytes: {:?}", e);
+                            format!("ERROR: Failed read response body in bytes: {:?}", e);
+                        log.debug(&error_msg);
+                        Err(error_msg)?
+                    }
+                };
+                if log.enabled() {
+                    // TeroV following  will be already json formatted, so need to pretty print again => in general yes
+                    let debug_str = String::from_utf8_lossy(&*response_bytes);
+                    log.debug_d(&debug_str.to_string());
+                }
+
+                // there might be error although sending it self worked fine
+                if http_status != reqwest::StatusCode::OK {
+                    let error_msg = format!(
+                        "ERROR: Prompt request failed: status_code={:?}",
+                        http_status
+                    );
+                    log.debug(&error_msg);
+                    Err(error_msg)?
+                }
+
+                let prompt_response: PromptResponse = match serde_json::from_slice(&response_bytes)
+                {
+                    Ok(my_struct) => my_struct,
+                    Err(e) => {
+                        let error_msg = format!(
+                            "ERROR: Failed to parse response to PromptResponse json: {:?}",
+                            e
+                        );
                         log.debug(&error_msg);
                         Err(error_msg)?
                     }
                 };
 
-                let response = match body_json
+                let response = match prompt_response
                     .choices
                     .first()
                     .map(|choice| &choice.message.content)
