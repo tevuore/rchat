@@ -80,6 +80,7 @@ mod private {
         content: String,
     }
 
+    // TeroV struct for prompts, me and AI, list of 
     pub async fn request(
         my_prompt: &String,
         settings: &ChatGptSettings,
@@ -131,7 +132,6 @@ mod private {
                     }
                 };
                 if log.enabled() {
-                    // TeroV following  will be already json formatted, so need to pretty print again => in general yes
                     let debug_str = String::from_utf8_lossy(&*response_bytes);
                     log.debug_d(&debug_str.to_string());
                 }
