@@ -85,6 +85,10 @@ impl FileDebugLogger {
     }
 }
 
+// TODO if getting rid of own logger impl, could this be added as extension trait?
+//      https://stackoverflow.com/questions/33376486/is-there-a-way-other-than-traits-to-add-methods-to-a-type-i-dont-own
+//
+
 // TODO as generic this can't go to trait as size is then not known during compile time,
 //      but is there anyway include this to trait? Or something similar?
 pub fn debug_as_json<T>(log: &Box<dyn DebugLogger>, msg: &T)
