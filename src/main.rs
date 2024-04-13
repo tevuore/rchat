@@ -59,9 +59,16 @@ async fn main() -> Result<()> {
     printer::me_print_stdout(&prompt, &args);
 
     // TeroV pass for request previous messages
-    // TeroV in case of custom instructions put it as first msg
 
-    match chatgpt_request(&prompt, &settings.chatgpt, &log).await {
+    // in case of custom instructions put it always as first msg
+    let request_prompt = match &args.custom_instructions {
+        None => {prompt}
+        Some(ins) => {
+            ins.to_owned() + "\n\n" + &*prompt
+        }
+    };
+
+    match chatgpt_request(&request_prompt, &settings.chatgpt, &log).await {
         Ok(response) => {
             printer::ai_print_stdout(&response, &args);
         }
