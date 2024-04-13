@@ -48,7 +48,6 @@ mod private {
         content: String,
     }
 
-    // This `derive` requires the `serde` dependency.
     #[derive(Deserialize, Serialize)]
     struct PromptResponse {
         id: String,
@@ -78,6 +77,27 @@ mod private {
     struct PromptResponseMessage {
         role: String,
         content: String,
+    }
+
+    #[derive(Deserialize)]
+    // {
+    //     "error": {
+    //         "message": "You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.",
+    //         "type": "insufficient_quota",
+    //         "param": null,
+    //         "code": "insufficient_quota"
+    //     }
+    // }
+    struct PromptResponseErrorMessage {
+        error: PromptResponseError
+    }
+
+    #[derive(Deserialize)]
+    struct PromptResponseError {
+        message: String,
+        r#type: String,
+        param: Option<String>,
+        code: String
     }
 
     pub async fn request(
@@ -135,14 +155,29 @@ mod private {
                     log.debug_d(&debug_str.to_string());
                 }
 
-                // there might be error although sending it self worked fine
+                log.debug_d(&format!("Got response with bytes {}", response_bytes.len()));
+
+                // there might be error although sending itself worked fine
                 if http_status != reqwest::StatusCode::OK {
                     let error_msg = format!(
                         "ERROR: Prompt request failed: status_code={:?}",
                         http_status
                     );
                     log.debug(&error_msg);
-                    Err(error_msg)?
+                    let error_response: PromptResponseErrorMessage = match serde_json::from_slice(&response_bytes)
+                    {
+                        Ok(error_msg) => error_msg,
+                        Err(e) => {
+                            let error_msg = format!(
+                                "ERROR: Failed to parse error response from json: {}",
+                                e
+                            );
+                            log.debug(&error_msg);
+                            Err(error_msg)?
+                        }
+                    };
+                    let err_str = format!("Response error {}: {}", error_response.error.code, error_response.error.message);
+                    Err(err_str)? // TODO more specific error types? benefit of thiserror?
                 }
 
                 let prompt_response: PromptResponse = match serde_json::from_slice(&response_bytes)

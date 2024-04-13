@@ -44,7 +44,7 @@ async fn main() -> Result<()> {
         }
     };
 
-    // TeroV how to defined settings on config, command, env
+    // TeroV how to define settings on config, command, env
 
     // order of defining settings
     // 1. if defined on command line -> use it
