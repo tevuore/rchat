@@ -39,4 +39,7 @@ $ cargo run -- -d "How are you?"
 
 # Read prompt from stdin
 $ cargo run
+
+# Use custom instruction
+$ cargo run -- -c "Give a very lengthy but polite answer" "How are you?"
 ```

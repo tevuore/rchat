@@ -1,5 +1,7 @@
 #![allow(unused)]
 
+extern crate core;
+
 use std::fs::File;
 use std::io::{BufRead, BufReader, Error, Read, Result};
 use std::path::Path;
@@ -8,6 +10,7 @@ use clap::{arg, Parser};
 use toml::value::Table;
 
 use crate::chatgpt_request::chatgpt_request;
+use crate::cli::public::parse;
 use crate::cli::Cli;
 use crate::debug_logger::{DebugLogger, EmptyDebugLogger, FileDebugLogger, StdoutDebugLogger};
 use crate::settings::settings;
@@ -24,7 +27,7 @@ mod settings;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let args = Cli::parse();
+    let args = parse();
 
     let log = build_debug_logger(&args);
     log.debug(&"Starting...");
@@ -41,12 +44,29 @@ async fn main() -> Result<()> {
         }
     };
 
+    // TeroV how to define settings on config, command, env
+
+    // order of defining settings
+    // 1. if defined on command line -> use it
+    // 2. if defined on env var -> use it
+    // 3. if defined on config file -> use it
+    // 4. if not defined -> use default
+
     let settings = settings(&args, &log)?;
 
     // TODO rethink this way of passing logger, IoC way?
 
     printer::me_print_stdout(&prompt, &args);
-    match chatgpt_request(&prompt, &settings.chatgpt, &log).await {
+
+    // TeroV pass for request previous messages
+
+    // in case of custom instructions put it always as first msg
+    let request_prompt = match &args.custom_instructions {
+        None => prompt,
+        Some(ins) => ins.to_owned() + "\n\n" + &*prompt,
+    };
+
+    match chatgpt_request(&request_prompt, &settings.chatgpt, &log).await {
         Ok(response) => {
             printer::ai_print_stdout(&response, &args);
         }

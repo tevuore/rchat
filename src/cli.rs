@@ -22,7 +22,12 @@ pub mod public {
 
         #[arg(long)]
         pub no_markdown_input: bool,
+
+        #[arg(short, long)]
+        pub custom_instructions: Option<String>,
     }
 
-    // TODO add parsing method here
+    pub fn parse() -> Cli {
+        Cli::parse()
+    }
 }
