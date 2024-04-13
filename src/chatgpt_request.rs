@@ -89,7 +89,7 @@ mod private {
     //     }
     // }
     struct PromptResponseErrorMessage {
-        error: PromptResponseError
+        error: PromptResponseError,
     }
 
     #[derive(Deserialize)]
@@ -97,7 +97,7 @@ mod private {
         message: String,
         r#type: String,
         param: Option<String>,
-        code: String
+        code: String,
     }
 
     pub async fn request(
@@ -164,19 +164,22 @@ mod private {
                         http_status
                     );
                     log.debug(&error_msg);
-                    let error_response: PromptResponseErrorMessage = match serde_json::from_slice(&response_bytes)
-                    {
-                        Ok(error_msg) => error_msg,
-                        Err(e) => {
-                            let error_msg = format!(
-                                "ERROR: Failed to parse error response from json: {}",
-                                e
-                            );
-                            log.debug(&error_msg);
-                            Err(error_msg)?
-                        }
-                    };
-                    let err_str = format!("Response error {}: {}", error_response.error.code, error_response.error.message);
+                    let error_response: PromptResponseErrorMessage =
+                        match serde_json::from_slice(&response_bytes) {
+                            Ok(error_msg) => error_msg,
+                            Err(e) => {
+                                let error_msg = format!(
+                                    "ERROR: Failed to parse error response from json: {}",
+                                    e
+                                );
+                                log.debug(&error_msg);
+                                Err(error_msg)?
+                            }
+                        };
+                    let err_str = format!(
+                        "Response error {}: {}",
+                        error_response.error.code, error_response.error.message
+                    );
                     Err(err_str)? // TODO more specific error types? benefit of thiserror?
                 }
 

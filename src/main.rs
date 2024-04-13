@@ -62,10 +62,8 @@ async fn main() -> Result<()> {
 
     // in case of custom instructions put it always as first msg
     let request_prompt = match &args.custom_instructions {
-        None => {prompt}
-        Some(ins) => {
-            ins.to_owned() + "\n\n" + &*prompt
-        }
+        None => prompt,
+        Some(ins) => ins.to_owned() + "\n\n" + &*prompt,
     };
 
     match chatgpt_request(&request_prompt, &settings.chatgpt, &log).await {
