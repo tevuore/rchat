@@ -1,26 +1,22 @@
-pub use public::*;
+use crate::cli::Cli;
+use crate::debug_logger::DebugLogger;
+use std::io::Result;
 
-pub mod public {
-    use super::private::*;
-    use crate::cli::Cli;
-    use crate::debug_logger::DebugLogger;
-    use std::io::Result;
-
-    #[derive(Debug)]
-    pub struct Settings {
-        pub chatgpt: ChatGptSettings,
-    }
-
-    #[derive(Debug)]
-    pub struct ChatGptSettings {
-        pub api_key: String,
-        pub model: String, // TODO should use enum?
-    }
-
-    pub fn settings(args: &Cli, log: &Box<dyn DebugLogger>) -> Result<Settings> {
-        _settings(args, log)
-    }
+#[derive(Debug)]
+pub struct Settings {
+    pub chatgpt: ChatGptSettings,
 }
+
+#[derive(Debug)]
+pub struct ChatGptSettings {
+    pub api_key: String,
+    pub model: String, // TODO should use enum?
+}
+
+pub fn settings(args: &Cli, log: &Box<dyn DebugLogger>) -> Result<Settings> {
+    private::_settings(args, log)
+}
+
 
 mod private {
     use crate::cli::Cli;
@@ -31,8 +27,6 @@ mod private {
     use std::io::{BufReader, Read, Result};
     use std::path::{Path, PathBuf};
     use toml::value::Table;
-
-    use super::public;
 
     // TODO how to validate model is correct one (name)?
 

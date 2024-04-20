@@ -1,5 +1,3 @@
-// TODO this is test without sub modules, is good enough?
-
 use std::fmt::{Debug, Display};
 use std::fs::File;
 use std::io::Write;

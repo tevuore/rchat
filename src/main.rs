@@ -10,7 +10,7 @@ use clap::{arg, Parser};
 use toml::value::Table;
 use crate::ai_providers::chatgpt::chatgpt_provider::ai_request;
 
-use crate::cli::public::parse;
+use crate::cli::parse;
 use crate::cli::Cli;
 use crate::debug_logger::{DebugLogger, EmptyDebugLogger, FileDebugLogger, StdoutDebugLogger};
 use crate::settings::settings;
