@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 // "model": "gpt-3.5-turbo-16k",
 // "messages": [{"role": "user", "content": "How to use ChatGPT API with cURL?"}]
-#[derive(Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct PromptRequest {
     pub model: String,
     pub messages: Vec<PromptRequestMessage>,
@@ -10,13 +10,13 @@ pub struct PromptRequest {
     // TODO there also other props in API doc
 }
 
-#[derive(Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct PromptRequestMessage {
     pub role: String,
     pub content: String,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct PromptResponse {
     pub id: String,
     pub object: String,
@@ -26,14 +26,14 @@ pub struct PromptResponse {
     pub choices: Vec<PromptResponseChoice>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct PromptResponseUsage {
     pub prompt_tokens: u32,
     pub completion_tokens: u32,
     pub total_tokens: u32,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct PromptResponseChoice {
     pub index: u32,
     pub message: PromptResponseMessage,
@@ -41,7 +41,7 @@ pub struct PromptResponseChoice {
     pub finish_reason: String, // like "length" or "stop", "functional_call" TODO how to map to enum
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct PromptResponseMessage {
     pub role: String,
     pub content: String,
@@ -55,12 +55,12 @@ pub struct PromptResponseMessage {
 //         "code": "insufficient_quota"
 //     }
 // }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct PromptResponseErrorMessage {
     pub error: PromptResponseError,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct PromptResponseError {
     pub message: String,
     pub r#type: String,
