@@ -952,6 +952,7 @@ dependencies = [
 name = "rchat"
 version = "0.1.0"
 dependencies = [
+ "bytes",
  "clap",
  "dirs",
  "openssl",
