@@ -8,18 +8,18 @@ use std::path::Path;
 
 use clap::{arg, Parser};
 use toml::value::Table;
+use crate::ai_providers::chatgpt::chatgpt_provider::ai_request;
 
-use crate::chatgpt_request::chatgpt_request;
 use crate::cli::public::parse;
 use crate::cli::Cli;
 use crate::debug_logger::{DebugLogger, EmptyDebugLogger, FileDebugLogger, StdoutDebugLogger};
 use crate::settings::settings;
 
-mod chatgpt_request;
 mod cli;
 mod debug_logger;
 mod printer;
 mod settings;
+mod ai_providers;
 
 // TODO own error handling for file not found
 // TODO can we have hierarchical error, what failed and why failed?
@@ -66,7 +66,7 @@ async fn main() -> Result<()> {
         Some(ins) => ins.to_owned() + "\n\n" + &*prompt,
     };
 
-    match chatgpt_request(&request_prompt, &settings.chatgpt, &log).await {
+    match ai_request(&request_prompt, &settings.chatgpt, &log).await {
         Ok(response) => {
             printer::ai_print_stdout(&response, &args);
         }
